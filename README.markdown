@@ -18,7 +18,8 @@ new tool.
 Support For Older Scenes
 ------------------------
 
-The plugin keeps the old interface and tries to emulate the old bevel  
+The plugin keeps the old interface while providing a mode for R15 with  
+the new bevel tool interface and tries to emulate the old bevel tool  
 presets like Convex, Concave, etc. as well as possible. This was done  
 to support opening of older scenes that were saved with the plugin in  
 effect.
@@ -64,7 +65,7 @@ Supported Versions
 This version of the plugin only supports CINEMA 4D R15 and later.  
 
 Older versions for R12 through R14 are included in the dist ZIP and  
-the source for those versions can be found at the [old repository](http://github.com/andreberg/C4D-ChamferMaker-R12/downloads "Chamfer Maker R12-R14").
+the source for those versions can be found at the [old repository](http://github.com/andreberg/C4D-ChamferMaker-R12 "Chamfer Maker R12-R14").
 
 _The source included in this repository will not compile with older  
 CINEMA 4D versions and their APIs._
