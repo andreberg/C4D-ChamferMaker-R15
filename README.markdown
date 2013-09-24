@@ -42,6 +42,9 @@ The new bevel tool in R15 behaves differently depending on the currently
 active modelling mode. Right now Chamfer Maker does not follow this   
 behavior and supports edge mode only. I may change this in the future. 
 
+Also, the depending on the performance of the new bevel tool the plugin  
+may excibit better or worse performance than before.
+
 Installation
 ------------
 
