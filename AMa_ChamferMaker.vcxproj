@@ -21,6 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{5173C830-973B-4132-9662-ED1FFE4BB1DB}</ProjectGuid>
     <RootNamespace>AMa_ChamferMaker</RootNamespace>
+    <ProjectName>AMa_ChamferMaker_R15</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -88,6 +89,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>__LEGACY_API;WIN32;__PC;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;PSAPI_VERSION=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -100,6 +102,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>__LEGACY_API;WIN32;__PC;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;PSAPI_VERSION=1</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -113,6 +116,7 @@
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>__LEGACY_API;WIN64;__PC;_DEBUG;_WINDOWS;__C4D_64BIT;_CRT_SECURE_NO_WARNINGS;PSAPI_VERSION=1</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -130,6 +134,9 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <ProgramDatabaseFile>$(IntDir)$(TargetName)_$(Platform)_$(Configuration).pdb</ProgramDatabaseFile>
     </Link>
+    <ClCompile>
+      <PreprocessorDefinitions>__LEGACY_API;WIN64;__PC;NDEBUG;_WINDOWS;__C4D_64BIT;_CRT_SECURE_NO_WARNINGS;PSAPI_VERSION=1</PreprocessorDefinitions>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="source\AMa_ChamferMaker.cpp" />

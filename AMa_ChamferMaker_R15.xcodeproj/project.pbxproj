@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		65636C1E08E5922100FBAB34 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 65636BEF08E5922100FBAB34 /* main.cpp */; };
+		6582D01817EE080B00007F1F /* res in Resources */ = {isa = PBXBuildFile; fileRef = 6582D01717EE080B00007F1F /* res */; };
 		659C7CA8130D1CBF008F1206 /* AMa_ChamferMaker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 659C7CA7130D1CBF008F1206 /* AMa_ChamferMaker.cpp */; };
 /* End PBXBuildFile section */
 
@@ -51,8 +52,9 @@
 		6553A1DA0926F00F0034739A /* _api_debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = _api_debug.xcconfig; path = ../../resource/_api_lib/_api_debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		6553A1DB0926F00F0034739A /* _api_release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = _api_release.xcconfig; path = ../../resource/_api_lib/_api_release.xcconfig; sourceTree = SOURCE_ROOT; };
 		65636BEF08E5922100FBAB34 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		6582D01717EE080B00007F1F /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; path = res; sourceTree = "<group>"; };
 		659C7CA7130D1CBF008F1206 /* AMa_ChamferMaker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AMa_ChamferMaker.cpp; sourceTree = "<group>"; };
-		65E51693083D10D0005BFD9A /* AMa_ChamferMaker.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = AMa_ChamferMaker.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		65E51693083D10D0005BFD9A /* AMa_ChamferMaker.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; name = AMa_ChamferMaker.dylib; path = AMa_ChamferMaker_R15.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,6 +90,7 @@
 			isa = PBXGroup;
 			children = (
 				65636BD708E5922100FBAB34 /* source */,
+				6582D01717EE080B00007F1F /* res */,
 				65E516A4083D10D1005BFD9A /* _libs */,
 				65E51694083D10D0005BFD9A /* Products */,
 			);
@@ -124,9 +127,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		65E51692083D10D0005BFD9A /* AMa_ChamferMaker */ = {
+		65E51692083D10D0005BFD9A /* AMa_ChamferMaker_R15 */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 65450B66085517D80099394F /* Build configuration list for PBXNativeTarget "AMa_ChamferMaker" */;
+			buildConfigurationList = 65450B66085517D80099394F /* Build configuration list for PBXNativeTarget "AMa_ChamferMaker_R15" */;
 			buildPhases = (
 				65E5168D083D10D0005BFD9A /* Headers */,
 				65E5168E083D10D0005BFD9A /* Sources */,
@@ -140,7 +143,7 @@
 			dependencies = (
 				657FF1C90859150C00750201 /* PBXTargetDependency */,
 			);
-			name = AMa_ChamferMaker;
+			name = AMa_ChamferMaker_R15;
 			productName = "xtensions (Debug)";
 			productReference = 65E51693083D10D0005BFD9A /* AMa_ChamferMaker.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
@@ -151,9 +154,9 @@
 		65E5168A083D10D0005BFD9A /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0420;
+				LastUpgradeCheck = 0460;
 			};
-			buildConfigurationList = 65450B6A085517D90099394F /* Build configuration list for PBXProject "AMa_ChamferMaker" */;
+			buildConfigurationList = 65450B6A085517D90099394F /* Build configuration list for PBXProject "AMa_ChamferMaker_R15" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -174,7 +177,7 @@
 			);
 			projectRoot = ../../..;
 			targets = (
-				65E51692083D10D0005BFD9A /* AMa_ChamferMaker */,
+				65E51692083D10D0005BFD9A /* AMa_ChamferMaker_R15 */,
 			);
 		};
 /* End PBXProject section */
@@ -201,6 +204,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6582D01817EE080B00007F1F /* res in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -240,6 +244,11 @@
 		65450B67085517D80099394F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					C4D_COCOA,
+					"MAC_OS_X_VERSION_MIN_REQUIRED=1060",
+					__LEGACY_API,
+				);
 				SKIP_INSTALL = NO;
 			};
 			name = Debug;
@@ -247,6 +256,11 @@
 		65450B68085517D80099394F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					C4D_COCOA,
+					"MAC_OS_X_VERSION_MIN_REQUIRED=1060",
+					__LEGACY_API,
+				);
 				SKIP_INSTALL = NO;
 			};
 			name = Release;
@@ -256,11 +270,16 @@
 			baseConfigurationReference = 6553A1DA0926F00F0034739A /* _api_debug.xcconfig */;
 			buildSettings = {
 				C4D_ROOTDIR = ../..;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				OTHER_LDFLAGS = (
 					"$(OTHER_LDFLAGS)",
 					"$(C4D_ROOTDIR)/resource/_api_lib/lib_api_debug.a",
 				);
-				PRODUCT_NAME = AMa_ChamferMaker;
+				PRODUCT_NAME = AMa_ChamferMaker_R15;
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -270,7 +289,12 @@
 			baseConfigurationReference = 6553A1DB0926F00F0034739A /* _api_release.xcconfig */;
 			buildSettings = {
 				C4D_ROOTDIR = ../..;
-				PRODUCT_NAME = AMa_ChamferMaker;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				PRODUCT_NAME = AMa_ChamferMaker_R15;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -278,7 +302,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		65450B66085517D80099394F /* Build configuration list for PBXNativeTarget "AMa_ChamferMaker" */ = {
+		65450B66085517D80099394F /* Build configuration list for PBXNativeTarget "AMa_ChamferMaker_R15" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				65450B67085517D80099394F /* Debug */,
@@ -287,7 +311,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		65450B6A085517D90099394F /* Build configuration list for PBXProject "AMa_ChamferMaker" */ = {
+		65450B6A085517D90099394F /* Build configuration list for PBXProject "AMa_ChamferMaker_R15" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				65450B6B085517D90099394F /* Debug */,

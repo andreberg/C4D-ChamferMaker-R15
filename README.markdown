@@ -1,7 +1,7 @@
 Introduction
 ------------
 
-**AMa_ChamferMaker** is a generator plugin that allows you to add  
+**Chamfer Maker** is a generator plugin that allows you to add  
 beveled edges to any 3D object, procedural or polygonal, while  
 keeping the object manager tree fully procedural. This means, you  
 can get nice accentuated edges that will make your renders look  
@@ -9,7 +9,37 @@ much more realistic while keeping the power to change things after
 the fact.
 
 It also has a few extra tricks under its sleeve for dealing with  
-geometry a bit more complicated.
+geometry a bit more complicated. 
+
+Since Chamfer Maker uses CINEMA 4D's bevel tool under the hood, which  
+was recently updated by MAXON the plugin was changed to make use of the  
+new tool.
+
+Support For Older Scenes
+------------------------
+
+The plugin keeps the old interface and tries to emulate the old bevel  
+presets like Convex, Concave, etc. as well as possible. This was done  
+to support opening of older scenes that were saved with the plugin in  
+effect.
+
+However, note that since the bevel tool changed dramatically there will  
+be differences. Most notably:
+
+- the *Variance* parameter is gone. In the old tool this gave you random  
+  point offsets on top of the bevel. Variance in the old interface now  
+  changes the new bevel tool's Tension parameter which most closely  
+  resembles the old effect. It is, then, no longer random but uniform.
+  
+- the triangulation of the newly inserted edges uses a different algorithm.  
+  This should only matter in complex models that need a large bevel. 
+ 
+Limitations
+-----------
+
+The new bevel tool in R15 behaves differently depending on the currently  
+active modelling mode. Right now Chamfer Maker does not follow this   
+behavior and supports edge mode only. I may change this in the future. 
 
 Installation
 ------------
@@ -18,28 +48,26 @@ Compile and install to CINEMA 4D's plugin folder
 (or the equivalent in the user preferences folder).
 
 If you do not want to compile the plugin, you can find   
-a pre-compiled binary distribution in the downloads   
-section.
+a pre-compiled binary distribution in the `dist` folder  
+of this repository. You don't have to fork the repository.  
 
-Note: the downloads section unfortunately was disabled by  
-github but you can still get to it by appending `/downloads`    
-to the end of the repository URL. 
-
-Or you can try this link:  
-
-[DOWNLOADS](http://github.com/andreberg/C4D-ChamferMaker-R12/downloads "DOWNLOADS")
-
-If that doesn't work I included the ready built plugins   
-in the repository under the `dist` directory so you get   
-the repository ZIP file by clicking `Download ZIP` on   
-this page.
+If you wish you don't even have to download the complete  
+repository ZIP file that includes the source.
+  
+Just browse to the `dist` folder in this repository and   
+click "View Raw" on one of the ZIP files found in the dist  
+folder to download just that ZIP.
 
 Supported Versions
 ------------------
 
-The current version, named `AMa_Chamfer_Maker-R14.zip` is for R14,  
-but you can also find the previous version for R12/R13 called  
-`AMa_Chamfer_Maker-R12-R13.zip`.
+This version of the plugin only supports CINEMA 4D R15 and later.  
+
+Older versions for R12 through R14 are included in the dist ZIP and  
+the source for those versions can be found at the [old repository](http://github.com/andreberg/C4D-ChamferMaker-R12/downloads "Chamfer Maker R12-R14").
+
+_The source included in this repository will not compile with older  
+CINEMA 4D versions and their APIs._
 
 Development
 -----------
@@ -51,11 +79,10 @@ the plugin folder found in user prefs). This is because all paths
 relevant to the compiler/linker are set up relative to the main  
 plugin folder.
 
-
 Basic Usage
 -----------
 
-Go to the *Plugins* menu, choose *AMa_ChamferMaker*.  
+Go to the *Plugins* menu, choose *Chamfer Maker*.  
 This will instantiate the generator object in the Object Manager.  
 
 From hereon you can put the model objects you want bevelled under the  
@@ -69,7 +96,7 @@ Attribution
 -----------
 
 Created by Antosha Marchenko in 2006.  
-Updated from the 2006 source code by yours truly.
+Updated and maintained from the 2006 source code by yours truly.
 
 Copyright
 ---------
