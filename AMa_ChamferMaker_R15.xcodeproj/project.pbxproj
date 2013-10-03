@@ -54,7 +54,7 @@
 		65636BEF08E5922100FBAB34 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		6582D01717EE080B00007F1F /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; path = res; sourceTree = "<group>"; };
 		659C7CA7130D1CBF008F1206 /* AMa_ChamferMaker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AMa_ChamferMaker.cpp; sourceTree = "<group>"; };
-		65E51693083D10D0005BFD9A /* AMa_ChamferMaker.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; name = AMa_ChamferMaker.dylib; path = AMa_ChamferMaker_R15.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		65E51693083D10D0005BFD9A /* AMa_ChamferMaker_R15.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; name = AMa_ChamferMaker_R15.dylib; path = AMa_ChamferMaker_R15.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,7 +99,7 @@
 		65E51694083D10D0005BFD9A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				65E51693083D10D0005BFD9A /* AMa_ChamferMaker.dylib */,
+				65E51693083D10D0005BFD9A /* AMa_ChamferMaker_R15.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -145,7 +145,7 @@
 			);
 			name = AMa_ChamferMaker_R15;
 			productName = "xtensions (Debug)";
-			productReference = 65E51693083D10D0005BFD9A /* AMa_ChamferMaker.dylib */;
+			productReference = 65E51693083D10D0005BFD9A /* AMa_ChamferMaker_R15.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 /* End PBXNativeTarget section */

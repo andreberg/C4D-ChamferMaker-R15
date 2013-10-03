@@ -7,7 +7,8 @@
 #include "O_AMa_ChamferMaker.h"
 
 #include "xbeveltool.h"
-#define _ID_BEVELTOOL 431000015
+#define _ID_BEVELTOOL           431000015
+#define _ID_CORRECTION_DEFORMER 1024542
 
 const LONG AMaPOINT_MAP_MAX_BRICKS = 50;
 
@@ -125,7 +126,7 @@ Bool GetNextPointInFan(Modeling * krnl, PolygonObject * obj, LONG pc, LONG p1, L
 LONG SplitEdge_AbsDist(Modeling * krnl, PolygonObject * obj, LONG p1, LONG p2, Real ChamfRadius);
 LONG SplitEdge_AbsDist(Modeling * krnl, PolygonObject * obj, LONG p1, LONG p2, Real ChamfRadius, Bool &tooClose);
 Bool ConnectPnts(Modeling * krnl, PolygonObject * obj, LONG p1, LONG p2pl1, LONG pl2, LONG pl3);
-
+BaseSelect * GetEdgeSFromCDeformer(BaseObject * op);
 
 #define HideParam_(id) HideParam((id), bc, description, ar)
 #define ShowParam_(id) ShowParam((id), bc, description, ar)
@@ -151,9 +152,10 @@ private:
     Bool NbrInitialized;
     Bool krnlInitialized;
     
-    Bool Recurse_All_Childs(BaseObject * gener, BaseThread * bt, BaseObject * op, String s_hierarPath);
+    Bool Recurse_All_Children(BaseObject * gener, BaseThread * bt, BaseObject * op, String s_hierarPath);
     Bool Recurse_First_Child(BaseObject * gener, BaseThread * bt, BaseObject * op, BaseObject * main, String s_hierarPath);
     Bool ModifyObj(BaseObject * mod, BaseObject * op, BaseObject * realObj);
+    Bool GetCurrentState(BaseObject * gener, BaseObject * op, BaseObject * realObj);
     Bool MakeChamf_In_AMa_PARALLEL_Mode(Bool CompositeModeOn, Bool DoubleParallel, Bool CompositeFirstPass);
     HNWeightTag * get_HN_tag();
 
@@ -583,7 +585,7 @@ BaseObject * AMaChamMaker::GetVirtualObjects(BaseObject * gener, HierarchyHelp *
     String s_hierarchyPath("");
     
     if (data->GetBool(AMa_CHMMKR_ALL_CHILDREN)) {
-        if (!Recurse_All_Childs(gener, hh->GetThread(), res, s_hierarchyPath)) {
+        if (!Recurse_All_Children(gener, hh->GetThread(), res, s_hierarchyPath)) {
             blDelete(res);
             return NULL;
         }
@@ -601,8 +603,8 @@ BaseObject * AMaChamMaker::GetVirtualObjects(BaseObject * gener, HierarchyHelp *
     return res;
 }
 
-// ----------Recurse_All_Childs-------------------------------------------------------------------------------------
-Bool AMaChamMaker::Recurse_All_Childs(BaseObject * gener, BaseThread * bt, BaseObject * op, String s_hierarPath) {
+// ----------Recurse_All_Children-------------------------------------------------------------------------------------
+Bool AMaChamMaker::Recurse_All_Children(BaseObject * gener, BaseThread * bt, BaseObject * op, String s_hierarPath) {
     
     if (op->IsInstanceOf(Opolygon)) {
         
@@ -620,6 +622,12 @@ Bool AMaChamMaker::Recurse_All_Childs(BaseObject * gener, BaseThread * bt, BaseO
                 break;
             }
         }
+        
+        chk = GetCurrentState(gener, op, realObj);
+        if (!chk) {
+            return false;
+        }
+        
         chk = ModifyObj(gener, op, realObj);
         if (!chk) {
             return false;
@@ -629,7 +637,7 @@ Bool AMaChamMaker::Recurse_All_Childs(BaseObject * gener, BaseThread * bt, BaseO
     s_hierarPath += "d";
     
     for (op = op->GetDown(); op; op = op->GetNext()) {
-        chk = Recurse_All_Childs(gener, bt, op, s_hierarPath);
+        chk = Recurse_All_Children(gener, bt, op, s_hierarPath);
         if (!chk) {
             return false;
         }
@@ -644,35 +652,53 @@ Bool AMaChamMaker::Recurse_First_Child(BaseObject * gener, BaseThread * bt, Base
     BaseObject * op_copy;
     Matrix matrG;
     
-    if (op->IsInstanceOf(Opolygon)) {
-        
-        BaseObject * realObj = gener->GetDown();
-        for (LONG i = 0; i < s_hierarPath.GetLength(); i++) {
-            switch (s_hierarPath[i]) {
-                case 'd':
-                    realObj = realObj->GetDown();
-                    break;
-                case 'n':
-                    realObj = realObj->GetNext();
-                    break;
-            }
-            if (!realObj) {
-                break;
+    BaseObject * tp = op->GetDeformCache();
+    if (tp) {
+        Recurse_First_Child(gener, bt, tp, main, s_hierarPath);
+    } else {
+        tp = op->GetCache(nullptr);
+        if (tp) {
+            Recurse_First_Child(gener, bt, tp, main, s_hierarPath);
+        } else {
+            if (!op->GetBit(BIT_CONTROLOBJECT)) {
+                if (op->IsInstanceOf(Opolygon)) {
+                    BaseObject * realObj = gener->GetDown();
+                    for (LONG i = 0; i < s_hierarPath.GetLength(); i++) {
+                        switch (s_hierarPath[i]) {
+                            case 'd':
+                                realObj = realObj->GetDown();
+                                break;
+                            case 'n':
+                                realObj = realObj->GetNext();
+                                break;
+                        }
+                        if (!realObj) {
+                            break;
+                        }
+                    }
+                    
+                    chk = GetCurrentState(gener, op, realObj);
+                    if (!chk) {
+                        return false;
+                    }
+                    
+                    chk = ModifyObj(gener, op, realObj);
+                    if (!chk) {
+                        return false;
+                    }
+                    
+                    op_copy = (BaseObject *) op->GetClone(COPYFLAGS_NO_HIERARCHY | COPYFLAGS_NO_ANIMATION, NULL);
+                    op_copy->InsertUnderLast(main);
+                    op_copy->SetMg(op->GetMg());
+                }
             }
         }
-        chk = ModifyObj(gener, op, realObj);
-        if (!chk) {
-            return false;
-        }
-        op_copy = (BaseObject *)op->GetClone(COPYFLAGS_NO_HIERARCHY | COPYFLAGS_NO_ANIMATION, NULL);
-        op_copy->InsertUnderLast(main);
-        op_copy->SetMg(op->GetMg());
     }
     
     s_hierarPath += "d";
     
-    for (op = op->GetDown(); op; op = op->GetNext()) {
-        chk = Recurse_First_Child(gener, bt, op, main, s_hierarPath);
+    for (tp = op->GetDown(); tp; tp = tp->GetNext()) {
+        chk = Recurse_First_Child(gener, bt, tp, main, s_hierarPath);
         if (!chk) {
             return false;
         }
@@ -680,6 +706,28 @@ Bool AMaChamMaker::Recurse_First_Child(BaseObject * gener, BaseThread * bt, Base
     }
     
     return (!bt || !bt->TestBreak());        // check for user break
+}
+
+Bool AMaChamMaker::GetCurrentState(BaseObject * gener, BaseObject * op, BaseObject * realObj) {
+    
+    BaseContainer bc;    
+    // just use defaults for now
+    //bc.SetBool(MDATA_CURRENTSTATETOOBJECT_INHERITANCE, false);
+    //bc.SetBool(MDATA_CURRENTSTATETOOBJECT_KEEPANIMATION, false);
+    //bc.SetBool(MDATA_CURRENTSTATETOOBJECT_NOGENERATE, false);
+    
+    ModelingCommandData cd;
+    cd.doc = realObj->GetDocument();
+    cd.bc = &bc;
+    cd.op = op;
+    cd.arr = NULL;
+    
+    chk = SendModelingCommand(MCOMMAND_CURRENTSTATETOOBJECT, cd);
+    if (!chk) {
+        return false;
+    }
+    
+    return true;
 }
 
 // ----------ModifyObj--------------------------------------------------------------------------------------
@@ -704,7 +752,15 @@ Bool AMaChamMaker::ModifyObj(BaseObject * mod, BaseObject * op, BaseObject * rea
             break;
         }
         case AMa_CHMMKR_SELMO_LIVE:
+        {
+            // get edge selection from correction deformer (if there is any)
+            BaseObject * deformer = realObj->GetDown();
+            BaseSelect * chedges = GetEdgeSFromCDeformer(deformer);
+            if(chedges) {
+                chedges->CopyTo(selE);
+            }
             break;
+        }
         case AMa_CHMMKR_SELMO_OPEN:
         {
             selE->DeselectAll();
@@ -967,7 +1023,8 @@ Bool AMaChamMaker::ModifyObj(BaseObject * mod, BaseObject * op, BaseObject * rea
     if (!chk) {
         return false;
     }
-    // GePrint( LongToString( sizeof( CHAR))) ;
+    
+    // GePrint(LongToString(sizeof(CHAR)));
     return true;
 } // ModifyObj
 
@@ -981,8 +1038,6 @@ Bool Register_AMa_Deformer(void) {
         return true;
     }
     
-    // Bool RegisterObjectPlugin(LONG id, const String &str, LONG info, DataAllocator *g,
-    //                           const String &description, BaseBitmap *icon, LONG disklevel);
     return RegisterObjectPlugin(ID_AMa_CHAMFER_MAKER, name, OBJECT_GENERATOR | OBJECT_INPUT,
                                 AMaChamMaker::Alloc, "O_AMa_ChamferMaker", AutoBitmap("AMa_ChamferMaker.tif"), 0);
 }
@@ -1022,10 +1077,8 @@ struct EdgeDataStruct {
     Bool closeForWeld[4];
     
     inline LONG p(CHAR w) {
-        /*if( w % 2)
-         return pB ;
-         else
-         return pA ;*/
+        /*if(w % 2) return pB;
+         else return pA;*/
         return ((&pA)[ w % 2]);
     };
     inline EdgeDataStruct * wing(CHAR w) {
@@ -1188,7 +1241,7 @@ Bool AMaChamMaker::MakeChamf_In_AMa_PARALLEL_Mode(Bool CompositeModeOn, Bool Dou
     LONG OrigPlgnCnt = obj->GetPolygonCount();
     
     LONG longUseHN = data->GetLong(AMa_CHMMKR_HN_WHAT);
-    Bool HN_priority, useHN = ( longUseHN != AMa_CHMMKR_HN_OFF);
+    Bool HN_priority, useHN = (longUseHN != AMa_CHMMKR_HN_OFF);
     Bool delHN_Tag = data->GetBool(AMa_CHMMKR_HN_RESET);
     Bool HN_useEdges = false, HN_usePoints = false;
     HNWeightTag * NH_Tag = NULL;
@@ -1205,16 +1258,16 @@ Bool AMaChamMaker::MakeChamf_In_AMa_PARALLEL_Mode(Bool CompositeModeOn, Bool Dou
     if (useHN) {
         if (!NH_Tag->GetTagData(&HN_data)) {
             useHN = false;
-        } else if ((*HN_data.points < OrigPntCnt) || ( *HN_data.polys < OrigPlgnCnt) ) {
+        } else if ((*HN_data.points < OrigPntCnt) || (*HN_data.polys < OrigPlgnCnt) ) {
             useHN = false;
             GePrint("HyperNURBS Tag has not enough elements");
         } else {
-            HN_plg_weights = *( (Real **)HN_data.polyweight);
-            HN_priority = ( data->GetLong(AMa_CHMMKR_HN_PRIORITY) == AMa_CHMMKR_HN_BIG);
-            if ((longUseHN == AMa_CHMMKR_HN_E_ONLY) || ( longUseHN == AMa_CHMMKR_HN_BOTH) ) {
+            HN_plg_weights = *((Real **)HN_data.polyweight);
+            HN_priority = (data->GetLong(AMa_CHMMKR_HN_PRIORITY) == AMa_CHMMKR_HN_BIG);
+            if ((longUseHN == AMa_CHMMKR_HN_E_ONLY) || (longUseHN == AMa_CHMMKR_HN_BOTH) ) {
                 HN_useEdges = true;
             }
-            if ((longUseHN == AMa_CHMMKR_HN_P_ONLY) || ( longUseHN == AMa_CHMMKR_HN_BOTH) ) {
+            if ((longUseHN == AMa_CHMMKR_HN_P_ONLY) || (longUseHN == AMa_CHMMKR_HN_BOTH) ) {
                 HN_usePoints = true;
             }
         }
@@ -1259,32 +1312,39 @@ Bool AMaChamMaker::MakeChamf_In_AMa_PARALLEL_Mode(Bool CompositeModeOn, Bool Dou
     
     const CPolygon * ObjPlgns = obj->GetPolygonR();
     const Vector * OrigPoints = obj->GetPointR();
+    
     if (!NbrInitialized) {
         nbr.Init(OrigPntCnt, ObjPlgns, OrigPlgnCnt, NULL);
         NbrInitialized = true;
     }
+    
     LONG i, e, seg_start, seg_end;
     LONG totalEdgeCnt = OrigPlgnCnt * 4;
     CHAR s;
+    
     EdgeDataStruct ** EdgeData = (EdgeDataStruct **)GeAlloc(sizeof(EdgeDataStruct *) * totalEdgeCnt);
     if (!EdgeData) {
         return false;
     }
+    
     LONG * indEDa = (LONG *)GeAlloc(sizeof(LONG *) * totalEdgeCnt);
     if (!indEDa) {
         return false;
     }
+    
     LONG ChargedEDaCount = 0;
     i = 0;
     while (selE->GetRange(i, MAXLONGl, &seg_start, &seg_end)) {
         i++;
         for (e = seg_start; e <= seg_end; e++) {
             if (!IsEdgeDoubled(&nbr, e)) {
+                
                 Bool valid;
                 EdgeData[e] = (EdgeDataStruct *)GeAlloc(sizeof(EdgeDataStruct));
                 if (!EdgeData[e]) {
                     return false;
                 }
+                
                 EdgeDataStruct * ed = EdgeData[e];
                 Get_x4_edge_points(ObjPlgns, e, ed->pA, ed->pB);
                 chk = Get_H_topol_points(krnl, obj, ed->pA, ed->pB, valid, ed->wingPntAL,
@@ -1293,26 +1353,27 @@ Bool AMaChamMaker::MakeChamf_In_AMa_PARALLEL_Mode(Bool CompositeModeOn, Bool Dou
                     return false;
                 }
                 
-                if (!valid || ((( ed->wingPntAL == ed->wingPntAR) || ( ed->wingPntBL == ed->wingPntBR) ) && !ed->open)) {
+                if (!valid || (((ed->wingPntAL == ed->wingPntAR) || (ed->wingPntBL == ed->wingPntBR) ) && !ed->open)) {
                     GeFree(EdgeData[e]);
                     continue;
                 }
                 
                 if (HN_useEdges) {
-                    /*LONG E_In_P = e % 4 ;
-                     LONG P_of_E = ( e - E_In_P) / 4 ;
-                     switch( E_In_P)
-                     {
-                     case 0: ed->HN_edg = (*HN_data.polyweight)[P_of_E].a ; break ;
-                     case 1: ed->HN_edg = (*HN_data.polyweight)[P_of_E].b ; break ;
-                     case 2: ed->HN_edg = (*HN_data.polyweight)[P_of_E].c ; break ;
-                     case 3: ed->HN_edg = (*HN_data.polyweight)[P_of_E].d ; break ;
+                    /*LONG E_In_P = e % 4;
+                     LONG P_of_E = (e - E_In_P) / 4;
+                     switch(E_In_P) {
+                        case 0: ed->HN_edg = (*HN_data.polyweight)[P_of_E].a ; break ;
+                        case 1: ed->HN_edg = (*HN_data.polyweight)[P_of_E].b ; break ;
+                        case 2: ed->HN_edg = (*HN_data.polyweight)[P_of_E].c ; break ;
+                        case 3: ed->HN_edg = (*HN_data.polyweight)[P_of_E].d ; break ;
                      }*/
                     ed->HN_weight_edg = 1.0 + HN_plg_weights[e];
                 }
+                
                 ed->pA_ins = ed->pA;
                 ed->pB_ins = ed->pB;
                 ed->num = ChargedEDaCount;
+                
                 if (ConnectOutlines) {
                     ed->vector = !( OrigPoints[ed->pA] - OrigPoints[ed->pB]);
                 }
@@ -1549,7 +1610,7 @@ Bool AMaChamMaker::MakeChamf_In_AMa_PARALLEL_Mode(Bool CompositeModeOn, Bool Dou
             }
         }
         // ------------------------------------------------------------------------- BL
-        if (!ed->wing_BL && !ed->secWing_BL && ( ed->secWing_BL_pnt != -1) && !ed->fanDisableBL) {
+        if (!ed->wing_BL && !ed->secWing_BL && (ed->secWing_BL_pnt != -1) && !ed->fanDisableBL) {
             p1 = ed->wingPntBL;
             p2 = ed->secWing_BL_pnt;
             while ( true) {
@@ -1581,10 +1642,10 @@ Bool AMaChamMaker::MakeChamf_In_AMa_PARALLEL_Mode(Bool CompositeModeOn, Bool Dou
             continue;
         }
         // ----------------------------------------------------------------------- AR
-        if (!ed->wing_AR && !ed->secWing_AR && ( ed->secWing_AR_pnt != -1) && !ed->fanDisableAR) {
+        if (!ed->wing_AR && !ed->secWing_AR && (ed->secWing_AR_pnt != -1) && !ed->fanDisableAR) {
             p1 = ed->wingPntAR;
             p2 = ed->secWing_AR_pnt;
-            while ( true) {
+            while (true) {
                 ed->fanCntAR++;
                 chk = GetNextPointInFan(krnl, obj, ed->pA, p1, p2, p3, finded);
                 if (!chk) {
@@ -1609,16 +1670,16 @@ Bool AMaChamMaker::MakeChamf_In_AMa_PARALLEL_Mode(Bool CompositeModeOn, Bool Dou
             }
         }
         // ---------------------------------------------------------------------- BR
-        if (!ed->wing_BR && !ed->secWing_BR && ( ed->secWing_BR_pnt != -1) && !ed->fanDisableBR) {
+        if (!ed->wing_BR && !ed->secWing_BR && (ed->secWing_BR_pnt != -1) && !ed->fanDisableBR) {
             p1 = ed->wingPntBR;
             p2 = ed->secWing_BR_pnt;
-            while ( true) {
+            while (true) {
                 ed->fanCntBR++;
                 chk = GetNextPointInFan(krnl, obj, ed->pB, p1, p2, p3, finded);
                 if (!chk) {
                     return false;
                 }
-                if (!finded || ( p3 == ed->pA) ) {
+                if (!finded || (p3 == ed->pA) ) {
                     ed->fanCntBR = 0;
                     break;
                 } else {
@@ -1669,7 +1730,7 @@ Bool AMaChamMaker::MakeChamf_In_AMa_PARALLEL_Mode(Bool CompositeModeOn, Bool Dou
                 for (CHAR w_ab = 0; w_ab < 2; w_ab++) {
                     CHAR w = w_ab + w_lr;
                     edc = ed;
-                    while ( true) {
+                    while (true) {
                         if (edc->connCheked[w] & 1) {
                             break;
                         }
@@ -1686,7 +1747,7 @@ Bool AMaChamMaker::MakeChamf_In_AMa_PARALLEL_Mode(Bool CompositeModeOn, Bool Dou
                         } else {
                             wAnti ^= 4;
                         }
-                        if (edc_wing->connCheked[ wAnti] & 1) {
+                        if (edc_wing->connCheked[wAnti] & 1) {
                             break;
                         }
                         edc_wing->connCheked[wAnti] |= 1;
@@ -1702,23 +1763,23 @@ Bool AMaChamMaker::MakeChamf_In_AMa_PARALLEL_Mode(Bool CompositeModeOn, Bool Dou
                         }
                         
                         quantityInLine++;
-                        vectAverage = !( vectAverage * quantityInLine + edc_wing->vector);
-                        edc->connCheked[ w] |= 2;
-                        edc->connCheked[ w ^ 2] |= 1;
-                        edc_wing->connCheked[ wAnti] |= 2;
-                        edc_wing->connCheked[ wAnti ^ 2] |= 1;
+                        vectAverage = !(vectAverage * quantityInLine + edc_wing->vector);
+                        edc->connCheked[w] |= 2;
+                        edc->connCheked[w ^ 2] |= 1;
+                        edc_wing->connCheked[wAnti] |= 2;
+                        edc_wing->connCheked[wAnti ^ 2] |= 1;
                         
-                        arrDotsForConnOutl[ ConnOutlCnt] =
+                        arrDotsForConnOutl[ConnOutlCnt] =
                         (ConnectOutlinesDot_Struct *)GeAlloc(sizeof(ConnectOutlinesDot_Struct));
-                        if (!arrDotsForConnOutl[ ConnOutlCnt]) {
+                        if (!arrDotsForConnOutl[ConnOutlCnt]) {
                             return false;
                         }
-                        arrDotsForConnOutl[ ConnOutlCnt]->pnt = edc->p(w);
-                        arrDotsForConnOutl[ ConnOutlCnt]->edge[0] = edc;
-                        arrDotsForConnOutl[ ConnOutlCnt]->edge[1] = edc_wing;
-                        arrDotsForConnOutl[ ConnOutlCnt]->edgeSide[0] = w;
-                        arrDotsForConnOutl[ ConnOutlCnt]->edgeSide[1] = wAnti;
-                        arrDotsForConnOutl[ ConnOutlCnt]->chain = connOutlChain;
+                        arrDotsForConnOutl[ConnOutlCnt]->pnt = edc->p(w);
+                        arrDotsForConnOutl[ConnOutlCnt]->edge[0] = edc;
+                        arrDotsForConnOutl[ConnOutlCnt]->edge[1] = edc_wing;
+                        arrDotsForConnOutl[ConnOutlCnt]->edgeSide[0] = w;
+                        arrDotsForConnOutl[ConnOutlCnt]->edgeSide[1] = wAnti;
+                        arrDotsForConnOutl[ConnOutlCnt]->chain = connOutlChain;
                         ConnOutlCnt++;
                         
                         edc = edc_wing;
@@ -1801,8 +1862,8 @@ Bool AMaChamMaker::MakeChamf_In_AMa_PARALLEL_Mode(Bool CompositeModeOn, Bool Dou
         if (HN_usePoints && !delHN_Tag && !FistPassOfDouble) {
             for (i = 0; i < ChargedEDaCount; i++) {
                 EdgeDataStruct * ed = EdgeData[indEDa[i]];
-                ( *HN_data.pointweight)[ed->pA] = 0;
-                ( *HN_data.pointweight)[ed->pB] = 0;
+                (*HN_data.pointweight)[ed->pA] = 0;
+                (*HN_data.pointweight)[ed->pB] = 0;
             }
         }
     }     // if useHN
@@ -2636,16 +2697,16 @@ Bool findNextPointAlongNgn(Modeling * krnl, PolygonObject * obj, LONG p1, LONG p
 
 // ----------Compare_pBaseObjects----------------------------------------------------------------------
 /*
- Bool Compare_pBaseObjects(BaseObject * Ob, BaseObject * cacheOb) {
- while ( cacheOb) {
- if ( Ob == cacheOb) {
- return true;
- } else {
- cacheOb = cacheOb->GetCacheParent();
- }
- }
- return false;
- }
+Bool Compare_pBaseObjects(BaseObject * Ob, BaseObject * cacheOb) {
+    while ( cacheOb) {
+        if ( Ob == cacheOb) {
+            return true;
+        } else {
+            cacheOb = cacheOb->GetCacheParent();
+        }
+    }
+    return false;
+}
  */
 
 // ----------SelectOpenEdges-------------------------------------------------------------------------
@@ -2914,4 +2975,21 @@ Bool ConnectPnts(Modeling * krnl, PolygonObject * obj, LONG p1, LONG p2pl1, LONG
         return false;
     }
     return true;
+}
+
+
+// ----------GetEdgeSFromCDeformer----------------------------------------------------------------------
+BaseSelect * GetEdgeSFromCDeformer(BaseObject * op) {
+    if (!op) {
+        return nullptr;
+    }
+    if (op->IsInstanceOf(_ID_CORRECTION_DEFORMER)) {
+        if (op->GetDeformMode()) { // deformer is enabled
+            return ToPoly(op)->GetEdgeS();
+        }
+    }
+    for (op = op->GetDown(); op; op = op->GetNext()) {
+        GetEdgeSFromCDeformer(op);
+    }
+    return nullptr;
 }

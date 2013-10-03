@@ -12,67 +12,14 @@
 // forward declarations
 Bool Register_AMa_Deformer(void);
 
-C4D_CrashHandler old_handler;
-
-void SDKCrashHandler(CHAR * crashinfo) {
-    // printf("SDK CrashInfo:\n");
-    // printf(crashinfo);
-
-    // don't forget to call the original handler!!!
-    if (old_handler) {
-        (*old_handler)(crashinfo);
-    }
-}
-
-void EnhanceMainMenu(void) {
-    // do this only if necessary - otherwise the user will end up with dozens of menus!
-
-    if ((Bool)GeGetVersionType() < 0) {   // only if C4D is loaded
-        return;
-    }
-
-    BaseContainer * bc = GetMenuResource(String("M_EDITOR"));
-    if (!bc) {
-        return;
-    }
-
-    // search for the most important menu entry. if present, the user has customized the settings
-    // -> don't add menu again
-    if (SearchMenuResource(bc, String("PLUGIN_CMD_1000472"))) {
-        return;
-    }
-
-    GeData * last = SearchPluginMenuResource();
-
-    BaseContainer sc;
-    sc.InsData(MENURESOURCE_SUBTITLE, String("SDK Test"));
-    sc.InsData(MENURESOURCE_COMMAND, String("IDM_NEU"));    // add C4D's new scene command to menu
-    sc.InsData(MENURESOURCE_SEPERATOR, TRUE);
-    sc.InsData(MENURESOURCE_COMMAND, String("PLUGIN_CMD_1000472"));    // add ActiveObject dialog to menu
-
-    if (last) {
-        bc->InsDataAfter(MENURESOURCE_STRING, sc, last);
-    } else { // user killed plugin menu - add as last overall entry
-        bc->InsData(MENURESOURCE_STRING, sc);
-    }
-}
-
 Bool PluginStart(void) {
-    // example of installing a crashhandler
-    old_handler = C4DOS.CrashHandler;     // backup the original handler (must be called!)
-    C4DOS.CrashHandler = SDKCrashHandler;     // insert the own handler
 
-    C4DPL_CommandLineArgs args;
-    if (GetCommandLineArgs(args)) {
-        GeConsoleOut("COMMANDLINE number of arguments: " + LongToString(args.argc));
-    }
-
-
-    // tool plugins
     if (!Register_AMa_Deformer()) {
         return FALSE;
     }
 
+    GePrint("  Chamfer Maker R15 (r2), Andre Berg 2013.  ");
+    
     return TRUE;
 }
 
@@ -80,8 +27,7 @@ void PluginEnd(void) {
 }
 
 Bool PluginMessage(LONG id, void * data) {
-    // use the following lines to set a plugin priority
-    //
+    
     switch (id) {
         case C4DPL_INIT_SYS:
             if (!resource.Init()) {
@@ -119,19 +65,6 @@ Bool PluginMessage(LONG id, void * data) {
         }
         break;
 
-        case C4DPL_EDITIMAGE:
-        {
-            C4DPL_EditImage * editimage = (C4DPL_EditImage *)data;
-            if (!data) {
-                break;
-            }
-            if (editimage->return_processed) {
-                break;
-            }
-            GePrint("C4DSDK - Edit Image Hook: " + editimage->imagefn->GetString());
-            // editimage->return_processed = TRUE; if image was processed
-        }
-            return FALSE;
     } // switch
 
     return FALSE;
